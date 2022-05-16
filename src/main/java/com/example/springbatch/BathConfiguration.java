@@ -1,5 +1,7 @@
 package com.example.springbatch;
 
+import com.example.springbatch.entities.Coin;
+import com.example.springbatch.services.ListCoinService;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -18,6 +20,7 @@ import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilde
 import org.springframework.batch.item.file.FlatFileItemReader;
 import org.springframework.batch.item.file.builder.FlatFileItemReaderBuilder;
 import org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper;
+import org.springframework.batch.repeat.RepeatStatus;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -25,6 +28,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.ClassPathResource;
 
 import javax.sql.DataSource;
+import java.util.List;
 
 @Configuration
 @EnableBatchProcessing
@@ -38,6 +42,9 @@ public class BathConfiguration extends DefaultBatchConfigurer {
     @Autowired
     public StepBuilderFactory stepBuilderFactory;
 
+    @Autowired
+    public ListCoinService listCoinService;
+
     @Value("${file.input}")
     private String fileInput;
 
@@ -46,28 +53,6 @@ public class BathConfiguration extends DefaultBatchConfigurer {
         MapJobRepositoryFactoryBean factoryBean = new MapJobRepositoryFactoryBean();
         factoryBean.afterPropertiesSet();
         return factoryBean.getObject();
-    }
-
-    @Bean
-    public FlatFileItemReader reader() {
-        LOG.info("read file");
-        return new FlatFileItemReaderBuilder().name("test")
-                .resource(new ClassPathResource(fileInput))
-                .delimited()
-                .names(new String[] {"name", "runOrder"})
-                .fieldSetMapper(new BeanWrapperFieldSetMapper() {{
-                    setTargetType(TestBatch.class);
-                }}).build();
-    }
-
-    @Bean
-    public JdbcBatchItemWriter writer(DataSource dataSource) {
-        log.info(String.valueOf(dataSource));
-        return new JdbcBatchItemWriterBuilder()
-                .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider())
-                .sql("INSERT INTO test_batch (name, run_order) VALUES (:name, :runOrder)")
-                .dataSource(dataSource)
-                .build();
     }
 
 
@@ -82,13 +67,12 @@ public class BathConfiguration extends DefaultBatchConfigurer {
     }
 
     @Bean
-    public Step step1(JdbcBatchItemWriter writer) {
-        return stepBuilderFactory.get("step1")
-                .<TestBatch, TestBatch> chunk(10)
-                .reader(reader())
-                .processor(processor())
-                .writer(writer)
-                .build();
+    public Step step1() {
+        return stepBuilderFactory.get("step1").tasklet((stepContribution, chunkContext) -> {
+            List<Coin> list = listCoinService.getListCoin();
+            System.out.println(list);
+            return RepeatStatus.FINISHED;
+        }).build();
     }
 
     @Bean

@@ -24,6 +24,6 @@ public class ListCoinServiceImpl implements ListCoinService{
         HttpEntity<MultiValueMap> entity = new HttpEntity<>(map, headers);
         ResponseEntity<Coin[]> response
                 = restTemplate.exchange(resourceUrl + url, HttpMethod.GET , entity, Coin[].class);
-        return (List<Coin>) response;
+        return Arrays.asList(response.getBody());
     }
 }
