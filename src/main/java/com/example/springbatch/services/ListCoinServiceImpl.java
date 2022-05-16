@@ -1,6 +1,8 @@
 package com.example.springbatch.services;
 
 import com.example.springbatch.entities.Coin;
+import com.example.springbatch.repositories.ListCoinRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -10,6 +12,9 @@ import org.springframework.web.client.RestTemplate;
 import java.util.*;
 @Service
 public class ListCoinServiceImpl implements ListCoinService{
+    @Autowired
+    private ListCoinRepository listCoinRepository;
+
     @Value("${batch.urlResource}")
     private String resourceUrl;
 
@@ -25,5 +30,11 @@ public class ListCoinServiceImpl implements ListCoinService{
         ResponseEntity<Coin[]> response
                 = restTemplate.exchange(resourceUrl + url, HttpMethod.GET , entity, Coin[].class);
         return Arrays.asList(response.getBody());
+    }
+
+    @Override
+    public Boolean createCoin(List<Coin> list) {
+        listCoinRepository.saveAll(list);
+        return true;
     }
 }

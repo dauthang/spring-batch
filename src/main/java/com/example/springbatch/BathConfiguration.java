@@ -70,6 +70,9 @@ public class BathConfiguration extends DefaultBatchConfigurer {
     public Step step1() {
         return stepBuilderFactory.get("step1").tasklet((stepContribution, chunkContext) -> {
             List<Coin> list = listCoinService.getListCoin();
+            if(list.size() >0) {
+                listCoinService.createCoin(list);
+            }
             System.out.println(list);
             return RepeatStatus.FINISHED;
         }).build();

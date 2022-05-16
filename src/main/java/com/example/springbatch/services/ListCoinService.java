@@ -6,4 +6,5 @@ import java.util.List;
 
 public interface ListCoinService {
     public List<Coin> getListCoin();
+    Boolean createCoin(List<Coin> list);
 }
